@@ -6,25 +6,30 @@ import { JOB_PRIORITIES } from "@/lib/types";
 
 type Customer = { id: string; name: string };
 type Site = { id: string; customer_id: string; address: string };
+type JobType = { id: string; name: string };
 
 export function EditJobForm({
   jobId,
   customers,
   sites,
+  jobTypes,
   defaultCustomerId,
   defaultSiteId,
   defaultTitle,
   defaultDescription,
   defaultPriority,
+  defaultJobTypeId,
 }: {
   jobId: string;
   customers: Customer[];
   sites: Site[];
+  jobTypes: JobType[];
   defaultCustomerId: string;
   defaultSiteId: string;
   defaultTitle: string;
   defaultDescription: string;
   defaultPriority: string;
+  defaultJobTypeId: string;
 }) {
   const [customerId, setCustomerId] = useState(defaultCustomerId);
 
@@ -60,6 +65,24 @@ export function EditJobForm({
           className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
         />
       </div>
+
+      {jobTypes.length > 0 && (
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-zinc-500">Job type</label>
+          <select
+            name="job_type_id"
+            defaultValue={defaultJobTypeId}
+            className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
+          >
+            <option value="">No type set</option>
+            {jobTypes.map((jt) => (
+              <option key={jt.id} value={jt.id}>
+                {jt.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div className="flex flex-col gap-1">
         <label className="text-xs text-zinc-500">Customer</label>

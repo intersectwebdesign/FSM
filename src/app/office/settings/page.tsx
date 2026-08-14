@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { updateSettings } from "./actions";
+import { addJobType, deleteJobType, updateJobType } from "./job-types-actions";
 
 function formatHour(h: number) {
   if (h === 0 || h === 24) return "12:00 AM";
@@ -14,6 +15,11 @@ export default async function SettingsPage() {
     .select("*")
     .eq("id", 1)
     .single();
+
+  const { data: jobTypes } = await supabase
+    .from("job_types")
+    .select("id, name, enables_pat_testing")
+    .order("name");
 
   const hours = Array.from({ length: 24 }, (_, i) => i);
   const endHours = Array.from({ length: 24 }, (_, i) => i + 1);
@@ -103,6 +109,91 @@ export default async function SettingsPage() {
           className="mt-2 rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
         >
           Save
+        </button>
+      </form>
+
+      <div>
+        <h2 className="text-lg font-semibold text-zinc-900">Job types</h2>
+        <p className="text-sm text-zinc-500">
+          Used when creating a job. Only job types with &quot;Enables PAT
+          testing&quot; checked will show the PAT testing section on that
+          job.
+        </p>
+      </div>
+
+      <div className="max-w-md overflow-hidden rounded-lg border border-zinc-200 bg-white">
+        {jobTypes && jobTypes.length > 0 ? (
+          <div className="divide-y divide-zinc-100">
+            {jobTypes.map((jt) => (
+              <form
+                key={jt.id}
+                action={updateJobType}
+                className="flex flex-wrap items-center gap-2 px-4 py-3"
+              >
+                <input type="hidden" name="id" value={jt.id} />
+                <input
+                  type="text"
+                  name="name"
+                  defaultValue={jt.name}
+                  required
+                  className="w-40 rounded-md border border-zinc-300 px-2 py-1 text-sm font-medium text-zinc-900"
+                />
+                <label className="flex items-center gap-1.5 text-xs text-zinc-600">
+                  <input
+                    type="checkbox"
+                    name="enables_pat_testing"
+                    defaultChecked={jt.enables_pat_testing}
+                    className="h-4 w-4 rounded border-zinc-300"
+                  />
+                  Enables PAT testing
+                </label>
+                <button
+                  type="submit"
+                  className="rounded-md border border-zinc-300 px-2 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
+                >
+                  Save
+                </button>
+                <button
+                  type="submit"
+                  formAction={deleteJobType}
+                  className="ml-auto text-xs text-zinc-400 hover:text-red-600"
+                >
+                  Delete
+                </button>
+              </form>
+            ))}
+          </div>
+        ) : (
+          <p className="p-6 text-center text-sm text-zinc-500">
+            No job types yet.
+          </p>
+        )}
+      </div>
+
+      <form
+        action={addJobType}
+        className="flex max-w-md flex-wrap items-center gap-2 rounded-lg border border-dashed border-zinc-300 p-4"
+      >
+        <input
+          type="text"
+          name="name"
+          placeholder="New job type (e.g. Delivery)"
+          required
+          className="flex-1 rounded-md border border-zinc-300 px-3 py-2 text-sm"
+        />
+        <label className="flex items-center gap-1.5 text-xs text-zinc-600">
+          <input
+            type="checkbox"
+            name="enables_pat_testing"
+            className="h-4 w-4 rounded border-zinc-300"
+          />
+          Enables PAT testing
+        </label>
+        <button
+          type="submit"
+          className="rounded-md bg-zinc-900 px-3 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+        >
+          Add job type
         </button>
       </form>
     </div>

@@ -9,7 +9,7 @@ export default async function NewJobPage({
   const { customer_id } = await searchParams;
   const supabase = await createClient();
 
-  const [{ data: customers }, { data: sites }, { data: engineers }] =
+  const [{ data: customers }, { data: sites }, { data: engineers }, { data: jobTypes }] =
     await Promise.all([
       supabase.from("customers").select("id, name").order("name"),
       supabase.from("sites").select("id, customer_id, address").order("address"),
@@ -18,6 +18,7 @@ export default async function NewJobPage({
         .select("id, full_name")
         .eq("role", "engineer")
         .order("full_name"),
+      supabase.from("job_types").select("id, name").order("name"),
     ]);
 
   return (
@@ -32,6 +33,7 @@ export default async function NewJobPage({
         customers={customers ?? []}
         sites={sites ?? []}
         engineers={engineers ?? []}
+        jobTypes={jobTypes ?? []}
         defaultCustomerId={customer_id}
       />
     </div>

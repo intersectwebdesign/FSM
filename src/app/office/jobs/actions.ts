@@ -13,6 +13,7 @@ export async function createJob(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
   const priority = String(formData.get("priority") ?? "medium");
+  const jobTypeId = String(formData.get("job_type_id") ?? "");
   const assignedEngineerId = String(formData.get("assigned_engineer_id") ?? "");
   const scheduledStartLocal = String(formData.get("scheduled_start") ?? "");
   const scheduledEndLocal = validScheduledEnd(
@@ -43,6 +44,7 @@ export async function createJob(formData: FormData) {
       title,
       description: description || null,
       priority,
+      job_type_id: jobTypeId || null,
       status,
       assigned_engineer_id: assignedEngineerId || null,
       scheduled_start: scheduledStart || null,
@@ -72,6 +74,7 @@ export async function updateJobDetails(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
   const priority = String(formData.get("priority") ?? "medium");
+  const jobTypeId = String(formData.get("job_type_id") ?? "");
   if (!jobId || !customerId || !siteId || !title) return;
 
   const supabase = await createClient();
@@ -83,6 +86,7 @@ export async function updateJobDetails(formData: FormData) {
       title,
       description: description || null,
       priority,
+      job_type_id: jobTypeId || null,
     })
     .eq("id", jobId);
 

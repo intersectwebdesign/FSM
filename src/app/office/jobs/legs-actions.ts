@@ -232,3 +232,27 @@ export async function updateLegStatus(formData: FormData) {
   revalidatePath("/engineer");
   revalidatePath("/office/schedule");
 }
+
+export async function deleteLeg(formData: FormData) {
+  const legId = String(formData.get("leg_id") ?? "");
+  if (!legId) return;
+
+  const supabase = await createClient();
+
+  const { data: current } = await supabase
+    .from("job_legs")
+    .select("job_id")
+    .eq("id", legId)
+    .single();
+  if (!current) return;
+
+  const { error } = await supabase.from("job_legs").delete().eq("id", legId);
+  if (error) throw new Error(error.message);
+
+  await recomputeJobRollupStatus(supabase, current.job_id);
+
+  revalidatePath(`/office/jobs/${current.job_id}`);
+  revalidatePath(`/engineer/jobs/${current.job_id}`);
+  revalidatePath("/engineer");
+  revalidatePath("/office/schedule");
+}

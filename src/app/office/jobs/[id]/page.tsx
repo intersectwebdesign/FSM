@@ -14,7 +14,7 @@ import {
   STATUS_LABELS,
 } from "@/lib/types";
 import { updateJobSchedule, updateJobStatus } from "../actions";
-import { addLeg, updateLegSchedule } from "../legs-actions";
+import { addLeg, deleteLeg, updateLegSchedule } from "../legs-actions";
 import { EditJobForm } from "./EditJobForm";
 import { isoToLocalInput } from "@/lib/timezone";
 
@@ -38,7 +38,7 @@ export default async function JobDetailPage({
     supabase
       .from("jobs")
       .select(
-        "*, customers(id, name), sites(id, address, city, postcode, access_notes)"
+        "*, customers(id, name), sites(id, address, city, postcode, access_notes), job_types(enables_pat_testing)"
       )
       .eq("id", id)
       .single(),
@@ -72,10 +72,13 @@ export default async function JobDetailPage({
 
   if (!job) notFound();
 
-  const [{ data: customers }, { data: sites }] = await Promise.all([
+  const [{ data: customers }, { data: sites }, { data: jobTypes }] = await Promise.all([
     supabase.from("customers").select("id, name").order("name"),
     supabase.from("sites").select("id, customer_id, address").order("address"),
+    supabase.from("job_types").select("id, name").order("name"),
   ]);
+
+  const showPatSection = !job.job_type_id || job.job_types?.enables_pat_testing;
 
   const { data: legs } = await supabase
     .from("job_legs")
@@ -269,6 +272,13 @@ export default async function JobDetailPage({
                       >
                         Save
                       </button>
+                      <button
+                        type="submit"
+                        formAction={deleteLeg}
+                        className="ml-auto text-xs text-zinc-400 hover:text-red-600"
+                      >
+                        Delete
+                      </button>
                     </div>
                   </form>
                 ))
@@ -390,32 +400,34 @@ export default async function JobDetailPage({
             )}
           </section>
 
-          <section>
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="font-medium text-zinc-900">PAT testing</h2>
-              {patTests && patTests.length > 0 && (
-                <Link
-                  href={`/office/jobs/${job.id}/pat-report`}
-                  className="text-sm font-medium text-zinc-900 hover:underline"
-                >
-                  View report
-                </Link>
-              )}
-            </div>
-            <SimpleTable
-              rows={patTests ?? []}
-              empty="No PAT tests logged for this job."
-              columns={[
-                { key: "appliance", render: (r) => r.appliances?.description ?? "-" },
-                {
-                  key: "result",
-                  render: (r) => (r.result === "pass" ? "Pass" : "Fail"),
-                },
-                { key: "by", render: (r) => r.profiles?.full_name ?? "-" },
-                { key: "when", render: (r) => formatDateTime(r.tested_at) },
-              ]}
-            />
-          </section>
+          {showPatSection && (
+            <section>
+              <div className="mb-2 flex items-center justify-between">
+                <h2 className="font-medium text-zinc-900">PAT testing</h2>
+                {patTests && patTests.length > 0 && (
+                  <Link
+                    href={`/office/jobs/${job.id}/pat-report`}
+                    className="text-sm font-medium text-zinc-900 hover:underline"
+                  >
+                    View report
+                  </Link>
+                )}
+              </div>
+              <SimpleTable
+                rows={patTests ?? []}
+                empty="No PAT tests logged for this job."
+                columns={[
+                  { key: "appliance", render: (r) => r.appliances?.description ?? "-" },
+                  {
+                    key: "result",
+                    render: (r) => (r.result === "pass" ? "Pass" : "Fail"),
+                  },
+                  { key: "by", render: (r) => r.profiles?.full_name ?? "-" },
+                  { key: "when", render: (r) => formatDateTime(r.tested_at) },
+                ]}
+              />
+            </section>
+          )}
 
           <section>
             <h2 className="mb-2 font-medium text-zinc-900">Status history</h2>
@@ -436,11 +448,13 @@ export default async function JobDetailPage({
             jobId={job.id}
             customers={customers ?? []}
             sites={sites ?? []}
+            jobTypes={jobTypes ?? []}
             defaultCustomerId={job.customer_id}
             defaultSiteId={job.site_id}
             defaultTitle={job.title}
             defaultDescription={job.description ?? ""}
             defaultPriority={job.priority}
+            defaultJobTypeId={job.job_type_id ?? ""}
           />
 
           <form

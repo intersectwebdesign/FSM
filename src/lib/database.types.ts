@@ -548,6 +548,27 @@ export type Database = {
           },
         ]
       }
+      job_types: {
+        Row: {
+          created_at: string
+          enables_pat_testing: boolean
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          enables_pat_testing?: boolean
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          enables_pat_testing?: boolean
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       jobs: {
         Row: {
           assigned_engineer_id: string | null
@@ -557,6 +578,7 @@ export type Database = {
           customer_id: string
           description: string | null
           id: string
+          job_type_id: string | null
           priority: string
           scheduled_end: string | null
           scheduled_start: string | null
@@ -572,6 +594,7 @@ export type Database = {
           customer_id: string
           description?: string | null
           id?: string
+          job_type_id?: string | null
           priority?: string
           scheduled_end?: string | null
           scheduled_start?: string | null
@@ -587,6 +610,7 @@ export type Database = {
           customer_id?: string
           description?: string | null
           id?: string
+          job_type_id?: string | null
           priority?: string
           scheduled_end?: string | null
           scheduled_start?: string | null
@@ -614,6 +638,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_job_type_id_fkey"
+            columns: ["job_type_id"]
+            isOneToOne: false
+            referencedRelation: "job_types"
             referencedColumns: ["id"]
           },
           {
