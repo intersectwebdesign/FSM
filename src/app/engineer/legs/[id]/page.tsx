@@ -38,11 +38,13 @@ export default async function EngineerLegDetailPage({
       .join(", ")
   );
 
-  const canStartTravel = !["travelling", "on_site", "completed", "cancelled"].includes(
+  const canStartTravel = !["travelling", "on_site", "paused", "completed", "cancelled"].includes(
     leg.status
   );
   const canArrive = leg.status === "travelling";
-  const canComplete = leg.status === "on_site";
+  const canPause = leg.status === "on_site";
+  const canResume = leg.status === "paused";
+  const canComplete = leg.status === "on_site" || leg.status === "paused";
 
   return (
     <div className="flex flex-col gap-6 pb-10">
@@ -90,6 +92,32 @@ export default async function EngineerLegDetailPage({
               className="rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white"
             >
               Arrived
+            </button>
+          </form>
+        )}
+
+        {canPause && (
+          <form action={updateLegStatus}>
+            <input type="hidden" name="leg_id" value={leg.id} />
+            <input type="hidden" name="status" value="paused" />
+            <button
+              type="submit"
+              className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700"
+            >
+              Pause
+            </button>
+          </form>
+        )}
+
+        {canResume && (
+          <form action={updateLegStatus}>
+            <input type="hidden" name="leg_id" value={leg.id} />
+            <input type="hidden" name="status" value="on_site" />
+            <button
+              type="submit"
+              className="rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white"
+            >
+              Resume
             </button>
           </form>
         )}

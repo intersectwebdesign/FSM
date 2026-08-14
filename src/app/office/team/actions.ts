@@ -8,6 +8,7 @@ export async function updateEngineer(formData: FormData) {
   const fullName = String(formData.get("full_name") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
   const rateRaw = String(formData.get("hourly_rate") ?? "").trim();
+  const travelRateRaw = String(formData.get("travel_rate") ?? "").trim();
   if (!id || !fullName) return;
 
   const supabase = await createClient();
@@ -17,6 +18,7 @@ export async function updateEngineer(formData: FormData) {
       full_name: fullName,
       phone: phone || null,
       hourly_rate: rateRaw === "" ? null : Number(rateRaw),
+      travel_rate: travelRateRaw === "" ? null : Number(travelRateRaw),
     })
     .eq("id", id);
 

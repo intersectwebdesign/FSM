@@ -7,6 +7,7 @@ export type JobStatus =
   | "in_progress"
   | "travelling"
   | "on_site"
+  | "paused"
   | "completed"
   | "cancelled";
 export type JobPriority = "low" | "medium" | "high";
@@ -16,6 +17,7 @@ export const JOB_STATUSES: JobStatus[] = [
   "scheduled",
   "travelling",
   "on_site",
+  "paused",
   "completed",
   "cancelled",
 ];
@@ -28,6 +30,7 @@ export const STATUS_LABELS: Record<JobStatus, string> = {
   in_progress: "In progress",
   travelling: "Travelling",
   on_site: "On site",
+  paused: "Paused",
   completed: "Completed",
   cancelled: "Cancelled",
 };
@@ -38,6 +41,7 @@ export const STATUS_COLORS: Record<JobStatus, string> = {
   in_progress: "bg-amber-100 text-amber-800",
   travelling: "bg-purple-100 text-purple-800",
   on_site: "bg-orange-100 text-orange-800",
+  paused: "bg-slate-200 text-slate-700",
   completed: "bg-green-100 text-green-800",
   cancelled: "bg-red-100 text-red-800",
 };

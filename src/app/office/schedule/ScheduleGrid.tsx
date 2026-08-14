@@ -352,6 +352,7 @@ function JobCard({
       in_progress: "bg-amber-50 border-amber-300",
       travelling: "bg-purple-50 border-purple-300",
       on_site: "bg-orange-50 border-orange-300",
+      paused: "bg-slate-100 border-slate-300",
       completed: "bg-green-50 border-green-300",
       cancelled: "bg-red-50 border-red-300",
     }[job.status] ?? "bg-zinc-100 border-zinc-300";

@@ -739,6 +739,7 @@ export type Database = {
           id: string
           phone: string | null
           role: string
+          travel_rate: number | null
         }
         Insert: {
           created_at?: string
@@ -747,6 +748,7 @@ export type Database = {
           id: string
           phone?: string | null
           role?: string
+          travel_rate?: number | null
         }
         Update: {
           created_at?: string
@@ -755,6 +757,7 @@ export type Database = {
           id?: string
           phone?: string | null
           role?: string
+          travel_rate?: number | null
         }
         Relationships: []
       }
@@ -831,6 +834,7 @@ export type Database = {
           labour_minutes: number | null
           materials_cost: number | null
           total_cost: number | null
+          travel_cost: number | null
           travel_minutes: number | null
           travel_started_at: string | null
         }
@@ -844,6 +848,7 @@ export type Database = {
           labour_cost: number | null
           labour_minutes: number | null
           leg_id: string | null
+          travel_cost: number | null
           travel_minutes: number | null
           travel_started_at: string | null
         }

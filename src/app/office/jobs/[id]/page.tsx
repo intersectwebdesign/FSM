@@ -184,8 +184,9 @@ export default async function JobDetailPage({
 
           <section>
             <h2 className="mb-2 font-medium text-zinc-900">Cost summary</h2>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
               <CostTile label="Labour" value={costs?.labour_cost} />
+              <CostTile label="Travel" value={costs?.travel_cost} />
               <CostTile label="Materials" value={costs?.materials_cost} />
               <CostTile label="Expenses" value={costs?.expenses_cost} />
               <CostTile label="Total" value={costs?.total_cost} bold />
