@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { SignOutButton } from "@/components/SignOutButton";
 
@@ -22,13 +23,31 @@ export default async function EngineerLayout({
     if (profile?.full_name) name = profile.full_name;
   }
 
+  const { data: settings } = await supabase
+    .from("company_settings")
+    .select("logo_url")
+    .eq("id", 1)
+    .single();
+
   return (
     <div className="flex min-h-full flex-1 flex-col bg-zinc-50">
       <header className="print:hidden sticky top-0 z-10 border-b border-zinc-200 bg-white">
-        <div className="flex items-center justify-between px-4 py-3">
-          <Link href="/account" className="font-semibold text-zinc-900">
-            {name}
-          </Link>
+        <div className="flex items-center justify-between gap-3 px-4 py-3">
+          <div className="flex items-center gap-3">
+            {settings?.logo_url && (
+              <Image
+                src={settings.logo_url}
+                alt="Company logo"
+                width={120}
+                height={32}
+                unoptimized
+                className="h-7 w-auto object-contain"
+              />
+            )}
+            <Link href="/account" className="font-semibold text-zinc-900">
+              {name}
+            </Link>
+          </div>
           <SignOutButton />
         </div>
       </header>

@@ -52,33 +52,6 @@ export async function addExpense(formData: FormData) {
   revalidatePath(`/engineer/jobs/${jobId}`);
 }
 
-export async function addNote(formData: FormData) {
-  const jobId = String(formData.get("job_id") ?? "");
-  const note = String(formData.get("note") ?? "").trim();
-  if (!jobId || !note) return;
-
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { data: job } = await supabase
-    .from("jobs")
-    .select("status")
-    .eq("id", jobId)
-    .single();
-
-  const { error } = await supabase.from("job_status_history").insert({
-    job_id: jobId,
-    status: job?.status ?? "unscheduled",
-    changed_by: user?.id ?? null,
-    note,
-  });
-
-  if (error) throw new Error(error.message);
-  revalidatePath(`/engineer/jobs/${jobId}`);
-}
-
 export async function addPhoto(formData: FormData) {
   const jobId = String(formData.get("job_id") ?? "");
   const caption = String(formData.get("caption") ?? "").trim();

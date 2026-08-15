@@ -40,7 +40,7 @@ export function ScheduleControls({
           onClick={() => navigate({ view: "day" })}
           className={`rounded-md border px-3 py-1.5 ${
             mode === "day"
-              ? "border-zinc-900 bg-zinc-900 text-white"
+              ? "border-brand bg-brand text-white"
               : "border-zinc-300 text-zinc-700 hover:bg-zinc-50"
           }`}
         >
@@ -50,7 +50,7 @@ export function ScheduleControls({
           onClick={() => navigate({ view: "week" })}
           className={`rounded-md border px-3 py-1.5 ${
             mode === "week"
-              ? "border-zinc-900 bg-zinc-900 text-white"
+              ? "border-brand bg-brand text-white"
               : "border-zinc-300 text-zinc-700 hover:bg-zinc-50"
           }`}
         >

@@ -44,7 +44,7 @@ export default async function PatOverviewPage({
           href="/office/pat"
           className={`rounded-md border px-3 py-1.5 ${
             !filter
-              ? "border-zinc-900 bg-zinc-900 text-white"
+              ? "border-brand bg-brand text-white"
               : "border-zinc-300 text-zinc-700 hover:bg-zinc-50"
           }`}
         >
@@ -64,7 +64,7 @@ export default async function PatOverviewPage({
           href="/office/pat?filter=untested"
           className={`rounded-md border px-3 py-1.5 ${
             filter === "untested"
-              ? "border-zinc-900 bg-zinc-900 text-white"
+              ? "border-brand bg-brand text-white"
               : "border-zinc-300 text-zinc-700 hover:bg-zinc-50"
           }`}
         >

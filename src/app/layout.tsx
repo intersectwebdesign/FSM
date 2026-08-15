@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { createClient } from "@/lib/supabase/server";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,11 +18,21 @@ export const metadata: Metadata = {
   description: "Internal job scheduling, dispatch, and cost tracking",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const supabase = await createClient();
+  const { data: settings } = await supabase
+    .from("company_settings")
+    .select("brand_color")
+    .eq("id", 1)
+    .single();
+
+  const brandColor = settings?.brand_color || "#2563eb";
+
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      style={{ "--brand": brandColor } as React.CSSProperties}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

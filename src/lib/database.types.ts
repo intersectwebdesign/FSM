@@ -63,25 +63,31 @@ export type Database = {
       }
       company_settings: {
         Row: {
+          brand_color: string
           day_end_hour: number
           day_start_hour: number
           id: number
+          logo_url: string | null
           maps_provider: string
           slot_minutes: number
           updated_at: string
         }
         Insert: {
+          brand_color?: string
           day_end_hour?: number
           day_start_hour?: number
           id?: number
+          logo_url?: string | null
           maps_provider?: string
           slot_minutes?: number
           updated_at?: string
         }
         Update: {
+          brand_color?: string
           day_end_hour?: number
           day_start_hour?: number
           id?: number
+          logo_url?: string | null
           maps_provider?: string
           slot_minutes?: number
           updated_at?: string
@@ -106,6 +112,24 @@ export type Database = {
           id?: string
           name?: string
           notes?: string | null
+        }
+        Relationships: []
+      }
+      job_categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
         }
         Relationships: []
       }
@@ -398,6 +422,55 @@ export type Database = {
           },
         ]
       }
+      job_notes: {
+        Row: {
+          author_id: string | null
+          body: string
+          created_at: string
+          id: string
+          is_internal: boolean
+          job_id: string
+        }
+        Insert: {
+          author_id?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean
+          job_id: string
+        }
+        Update: {
+          author_id?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean
+          job_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_notes_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_notes_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "job_costs_summary"
+            referencedColumns: ["job_id"]
+          },
+          {
+            foreignKeyName: "job_notes_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_photos: {
         Row: {
           caption: string | null
@@ -572,13 +645,18 @@ export type Database = {
       jobs: {
         Row: {
           assigned_engineer_id: string | null
+          category_id: string | null
+          charge_callout: boolean
           completed_at: string | null
           created_at: string
           created_by: string | null
           customer_id: string
           description: string | null
           id: string
+          is_overtime: boolean
           job_type_id: string | null
+          mileage_km: number | null
+          po_reference: string | null
           priority: string
           scheduled_end: string | null
           scheduled_start: string | null
@@ -588,13 +666,18 @@ export type Database = {
         }
         Insert: {
           assigned_engineer_id?: string | null
+          category_id?: string | null
+          charge_callout?: boolean
           completed_at?: string | null
           created_at?: string
           created_by?: string | null
           customer_id: string
           description?: string | null
           id?: string
+          is_overtime?: boolean
           job_type_id?: string | null
+          mileage_km?: number | null
+          po_reference?: string | null
           priority?: string
           scheduled_end?: string | null
           scheduled_start?: string | null
@@ -604,13 +687,18 @@ export type Database = {
         }
         Update: {
           assigned_engineer_id?: string | null
+          category_id?: string | null
+          charge_callout?: boolean
           completed_at?: string | null
           created_at?: string
           created_by?: string | null
           customer_id?: string
           description?: string | null
           id?: string
+          is_overtime?: boolean
           job_type_id?: string | null
+          mileage_km?: number | null
+          po_reference?: string | null
           priority?: string
           scheduled_end?: string | null
           scheduled_start?: string | null
@@ -624,6 +712,13 @@ export type Database = {
             columns: ["assigned_engineer_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "job_categories"
             referencedColumns: ["id"]
           },
           {
@@ -733,28 +828,37 @@ export type Database = {
       }
       profiles: {
         Row: {
+          callout_fee: number | null
           created_at: string
           full_name: string
           hourly_rate: number | null
           id: string
+          mileage_rate: number | null
+          overtime_rate: number | null
           phone: string | null
           role: string
           travel_rate: number | null
         }
         Insert: {
+          callout_fee?: number | null
           created_at?: string
           full_name?: string
           hourly_rate?: number | null
           id: string
+          mileage_rate?: number | null
+          overtime_rate?: number | null
           phone?: string | null
           role?: string
           travel_rate?: number | null
         }
         Update: {
+          callout_fee?: number | null
           created_at?: string
           full_name?: string
           hourly_rate?: number | null
           id?: string
+          mileage_rate?: number | null
+          overtime_rate?: number | null
           phone?: string | null
           role?: string
           travel_rate?: number | null
@@ -828,11 +932,13 @@ export type Database = {
       job_costs_summary: {
         Row: {
           arrived_at: string | null
+          callout_cost: number | null
           expenses_cost: number | null
           job_id: string | null
           labour_cost: number | null
           labour_minutes: number | null
           materials_cost: number | null
+          mileage_cost: number | null
           total_cost: number | null
           travel_cost: number | null
           travel_minutes: number | null

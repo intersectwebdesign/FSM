@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { SignOutButton } from "@/components/SignOutButton";
 import { OfficeNav } from "@/components/OfficeNav";
@@ -33,14 +34,31 @@ export default async function OfficeLayout({
     if (profile?.full_name) name = profile.full_name;
   }
 
+  const { data: settings } = await supabase
+    .from("company_settings")
+    .select("logo_url")
+    .eq("id", 1)
+    .single();
+
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <header className="print:hidden relative border-b border-zinc-200 bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-4 lg:gap-6">
-            <span className="whitespace-nowrap font-semibold text-zinc-900">
-              Field Service
-            </span>
+            {settings?.logo_url ? (
+              <Image
+                src={settings.logo_url}
+                alt="Company logo"
+                width={140}
+                height={36}
+                unoptimized
+                className="h-8 w-auto object-contain"
+              />
+            ) : (
+              <span className="whitespace-nowrap font-semibold text-zinc-900">
+                Field Service
+              </span>
+            )}
             <OfficeNav items={NAV} />
           </div>
           <div className="flex items-center gap-3 sm:gap-4">

@@ -76,7 +76,7 @@ export default async function CustomersPage() {
           </div>
           <button
             type="submit"
-            className="rounded-md bg-zinc-900 px-3 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+            className="rounded-md bg-brand px-3 py-2 text-sm font-medium text-white hover:bg-brand-hover"
           >
             Add customer
           </button>

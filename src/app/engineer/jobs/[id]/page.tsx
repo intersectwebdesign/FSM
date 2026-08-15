@@ -8,6 +8,7 @@ import { StartTravelButton } from "@/components/StartTravelButton";
 import { MapsLink } from "@/components/MapsLink";
 import { ChecklistItemRow } from "@/components/ChecklistItemRow";
 import { addChecklistItem } from "@/app/office/jobs/checklist-actions";
+import { addJobNote } from "@/app/office/jobs/notes-actions";
 import {
   DEFAULT_RETEST_MONTHS,
   formatCurrency,
@@ -21,7 +22,6 @@ import {
   addAppliance,
   addExpense,
   addMaterial,
-  addNote,
   addPhoto,
   recordPatTest,
 } from "../../actions";
@@ -70,11 +70,10 @@ export default async function EngineerJobDetailPage({
       .eq("job_id", id)
       .order("uploaded_at", { ascending: false }),
     supabase
-      .from("job_status_history")
-      .select("id, note, changed_at")
+      .from("job_notes")
+      .select("id, body, is_internal, created_at, profiles(full_name)")
       .eq("job_id", id)
-      .not("note", "is", null)
-      .order("changed_at", { ascending: false }),
+      .order("created_at", { ascending: false }),
     supabase.from("company_settings").select("maps_provider").eq("id", 1).single(),
   ]);
 
@@ -574,7 +573,7 @@ export default async function EngineerJobDetailPage({
                   />
                   <button
                     type="submit"
-                    className="rounded-md bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white"
+                    className="rounded-md bg-brand px-3 py-1.5 text-xs font-medium text-white"
                   >
                     Record test
                   </button>
@@ -621,24 +620,43 @@ export default async function EngineerJobDetailPage({
 
       <section className="rounded-lg border border-zinc-200 bg-white p-4">
         <h2 className="mb-3 text-sm font-semibold text-zinc-900">Notes</h2>
-        <ul className="mb-3 flex flex-col gap-2 text-sm text-zinc-600">
+        <ul className="mb-3 flex flex-col gap-2">
           {notes?.map((n) => (
-            <li key={n.id}>
-              <span className="text-xs text-zinc-400">
-                {formatDateTime(n.changed_at)}
-              </span>
-              <p>{n.note}</p>
+            <li
+              key={n.id}
+              className="rounded-md border border-zinc-100 bg-zinc-50 p-3"
+            >
+              <div className="flex items-center gap-2 text-xs text-zinc-400">
+                <span>{formatDateTime(n.created_at)}</span>
+                <span>&middot;</span>
+                <span>{n.profiles?.full_name ?? "Unknown"}</span>
+                {n.is_internal && (
+                  <span className="rounded-full bg-zinc-200 px-2 py-0.5 font-medium text-zinc-600">
+                    Internal
+                  </span>
+                )}
+              </div>
+              <p className="mt-1 text-sm text-zinc-700">{n.body}</p>
             </li>
           ))}
         </ul>
-        <form action={addNote} className="flex flex-col gap-2">
+        <form action={addJobNote} className="flex flex-col gap-2">
           <input type="hidden" name="job_id" value={job.id} />
           <textarea
-            name="note"
+            name="body"
             rows={3}
             required
             className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
           />
+          <label className="flex items-center gap-2 text-xs text-zinc-600">
+            <input
+              type="checkbox"
+              name="is_internal"
+              defaultChecked
+              className="h-4 w-4 rounded border-zinc-300"
+            />
+            Internal only (not customer-facing)
+          </label>
           <button
             type="submit"
             className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700"

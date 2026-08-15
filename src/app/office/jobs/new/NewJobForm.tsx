@@ -8,18 +8,21 @@ type Customer = { id: string; name: string };
 type Site = { id: string; customer_id: string; address: string };
 type Engineer = { id: string; full_name: string };
 type JobType = { id: string; name: string };
+type JobCategory = { id: string; name: string };
 
 export function NewJobForm({
   customers,
   sites,
   engineers,
   jobTypes,
+  jobCategories,
   defaultCustomerId,
 }: {
   customers: Customer[];
   sites: Site[];
   engineers: Engineer[];
   jobTypes: JobType[];
+  jobCategories: JobCategory[];
   defaultCustomerId?: string;
 }) {
   const [customerId, setCustomerId] = useState(defaultCustomerId ?? "");
@@ -76,6 +79,37 @@ export function NewJobForm({
           </select>
         </div>
       )}
+
+      {jobCategories.length > 0 && (
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-zinc-700">
+            Category
+          </label>
+          <select
+            name="category_id"
+            defaultValue=""
+            className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
+          >
+            <option value="">No category</option>
+            {jobCategories.map((jc) => (
+              <option key={jc.id} value={jc.id}>
+                {jc.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-medium text-zinc-700">
+          Customer PO / reference number
+        </label>
+        <input
+          name="po_reference"
+          placeholder="Leave blank to auto-generate"
+          className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
+        />
+      </div>
 
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium text-zinc-700">Customer</label>
@@ -170,7 +204,7 @@ export function NewJobForm({
 
       <button
         type="submit"
-        className="mt-2 rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+        className="mt-2 rounded-md bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-hover"
       >
         Create job
       </button>

@@ -9,6 +9,9 @@ export async function updateEngineer(formData: FormData) {
   const phone = String(formData.get("phone") ?? "").trim();
   const rateRaw = String(formData.get("hourly_rate") ?? "").trim();
   const travelRateRaw = String(formData.get("travel_rate") ?? "").trim();
+  const overtimeRateRaw = String(formData.get("overtime_rate") ?? "").trim();
+  const calloutFeeRaw = String(formData.get("callout_fee") ?? "").trim();
+  const mileageRateRaw = String(formData.get("mileage_rate") ?? "").trim();
   if (!id || !fullName) return;
 
   const supabase = await createClient();
@@ -19,6 +22,9 @@ export async function updateEngineer(formData: FormData) {
       phone: phone || null,
       hourly_rate: rateRaw === "" ? null : Number(rateRaw),
       travel_rate: travelRateRaw === "" ? null : Number(travelRateRaw),
+      overtime_rate: overtimeRateRaw === "" ? null : Number(overtimeRateRaw),
+      callout_fee: calloutFeeRaw === "" ? null : Number(calloutFeeRaw),
+      mileage_rate: mileageRateRaw === "" ? null : Number(mileageRateRaw),
     })
     .eq("id", id);
 

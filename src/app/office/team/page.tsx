@@ -5,7 +5,9 @@ export default async function TeamPage() {
   const supabase = await createClient();
   const { data: engineers } = await supabase
     .from("profiles")
-    .select("id, full_name, phone, hourly_rate, travel_rate")
+    .select(
+      "id, full_name, phone, hourly_rate, travel_rate, overtime_rate, callout_fee, mileage_rate"
+    )
     .eq("role", "engineer")
     .order("full_name");
 
@@ -16,7 +18,10 @@ export default async function TeamPage() {
         <p className="text-sm text-zinc-500">
           Field engineers and their rates, used to calculate labour cost on
           jobs. Hourly rate applies to on-site time; travel rate (usually
-          lower) applies to time spent travelling to a job. New engineers
+          lower) applies to time spent travelling to a job. Overtime rate
+          applies to a whole job when it&apos;s flagged as overtime. Call-out
+          fee is a flat charge for jobs that require one. Mileage rate is
+          per km, multiplied by the mileage logged on a job. New engineers
           sign up with an account created outside this page (Supabase
           Auth); they appear here automatically once they have signed up.
         </p>
@@ -76,6 +81,45 @@ export default async function TeamPage() {
                     name="travel_rate"
                     defaultValue={e.travel_rate ?? ""}
                     placeholder="Travel rate"
+                    className="w-28 rounded-md border border-zinc-300 px-2 py-1 text-sm"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-zinc-500">
+                    Overtime rate (AUD)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    name="overtime_rate"
+                    defaultValue={e.overtime_rate ?? ""}
+                    placeholder="Overtime rate"
+                    className="w-28 rounded-md border border-zinc-300 px-2 py-1 text-sm"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-zinc-500">
+                    Call-out fee (AUD)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    name="callout_fee"
+                    defaultValue={e.callout_fee ?? ""}
+                    placeholder="Call-out fee"
+                    className="w-28 rounded-md border border-zinc-300 px-2 py-1 text-sm"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-zinc-500">
+                    Mileage rate ($/km)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    name="mileage_rate"
+                    defaultValue={e.mileage_rate ?? ""}
+                    placeholder="Mileage rate"
                     className="w-28 rounded-md border border-zinc-300 px-2 py-1 text-sm"
                   />
                 </div>

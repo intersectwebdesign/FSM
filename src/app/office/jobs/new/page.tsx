@@ -9,17 +9,23 @@ export default async function NewJobPage({
   const { customer_id } = await searchParams;
   const supabase = await createClient();
 
-  const [{ data: customers }, { data: sites }, { data: engineers }, { data: jobTypes }] =
-    await Promise.all([
-      supabase.from("customers").select("id, name").order("name"),
-      supabase.from("sites").select("id, customer_id, address").order("address"),
-      supabase
-        .from("profiles")
-        .select("id, full_name")
-        .eq("role", "engineer")
-        .order("full_name"),
-      supabase.from("job_types").select("id, name").order("name"),
-    ]);
+  const [
+    { data: customers },
+    { data: sites },
+    { data: engineers },
+    { data: jobTypes },
+    { data: jobCategories },
+  ] = await Promise.all([
+    supabase.from("customers").select("id, name").order("name"),
+    supabase.from("sites").select("id, customer_id, address").order("address"),
+    supabase
+      .from("profiles")
+      .select("id, full_name")
+      .eq("role", "engineer")
+      .order("full_name"),
+    supabase.from("job_types").select("id, name").order("name"),
+    supabase.from("job_categories").select("id, name").order("name"),
+  ]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -34,6 +40,7 @@ export default async function NewJobPage({
         sites={sites ?? []}
         engineers={engineers ?? []}
         jobTypes={jobTypes ?? []}
+        jobCategories={jobCategories ?? []}
         defaultCustomerId={customer_id}
       />
     </div>

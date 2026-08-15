@@ -6,6 +6,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { DeleteJobButton } from "@/components/DeleteJobButton";
 import { ChecklistItemRow } from "@/components/ChecklistItemRow";
 import { addChecklistItem } from "../checklist-actions";
+import { addJobNote } from "../notes-actions";
 import {
   formatCurrency,
   formatDateTime,
@@ -34,6 +35,7 @@ export default async function JobDetailPage({
     { data: expenses },
     { data: photos },
     { data: engineers },
+    { data: notes },
   ] = await Promise.all([
     supabase
       .from("jobs")
@@ -68,15 +70,22 @@ export default async function JobDetailPage({
       .select("id, full_name")
       .eq("role", "engineer")
       .order("full_name"),
+    supabase
+      .from("job_notes")
+      .select("id, body, is_internal, created_at, profiles(full_name)")
+      .eq("job_id", id)
+      .order("created_at", { ascending: false }),
   ]);
 
   if (!job) notFound();
 
-  const [{ data: customers }, { data: sites }, { data: jobTypes }] = await Promise.all([
-    supabase.from("customers").select("id, name").order("name"),
-    supabase.from("sites").select("id, customer_id, address").order("address"),
-    supabase.from("job_types").select("id, name").order("name"),
-  ]);
+  const [{ data: customers }, { data: sites }, { data: jobTypes }, { data: jobCategories }] =
+    await Promise.all([
+      supabase.from("customers").select("id, name").order("name"),
+      supabase.from("sites").select("id, customer_id, address").order("address"),
+      supabase.from("job_types").select("id, name").order("name"),
+      supabase.from("job_categories").select("id, name").order("name"),
+    ]);
 
   const showPatSection = !job.job_type_id || job.job_types?.enables_pat_testing;
 
@@ -135,6 +144,7 @@ export default async function JobDetailPage({
           </Link>{" "}
           &middot; {job.sites?.address}
           {job.sites?.city ? `, ${job.sites.city}` : ""}
+          {job.po_reference ? ` · PO: ${job.po_reference}` : ""}
         </p>
       </div>
 
@@ -184,9 +194,11 @@ export default async function JobDetailPage({
 
           <section>
             <h2 className="mb-2 font-medium text-zinc-900">Cost summary</h2>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               <CostTile label="Labour" value={costs?.labour_cost} />
               <CostTile label="Travel" value={costs?.travel_cost} />
+              <CostTile label="Mileage" value={costs?.mileage_cost} />
+              <CostTile label="Call-out" value={costs?.callout_cost} />
               <CostTile label="Materials" value={costs?.materials_cost} />
               <CostTile label="Expenses" value={costs?.expenses_cost} />
               <CostTile label="Total" value={costs?.total_cost} bold />
@@ -334,7 +346,7 @@ export default async function JobDetailPage({
                   </div>
                   <button
                     type="submit"
-                    className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-zinc-800"
+                    className="rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-hover"
                   >
                     Add leg
                   </button>
@@ -431,6 +443,63 @@ export default async function JobDetailPage({
           )}
 
           <section>
+            <h2 className="mb-2 font-medium text-zinc-900">Notes</h2>
+            <div className="mb-3 flex flex-col gap-2">
+              {notes && notes.length > 0 ? (
+                notes.map((n) => (
+                  <div
+                    key={n.id}
+                    className="rounded-lg border border-zinc-200 bg-white p-3"
+                  >
+                    <div className="flex items-center gap-2 text-xs text-zinc-500">
+                      <span>{formatDateTime(n.created_at)}</span>
+                      <span>&middot;</span>
+                      <span>{n.profiles?.full_name ?? "Unknown"}</span>
+                      {n.is_internal && (
+                        <span className="rounded-full bg-zinc-100 px-2 py-0.5 font-medium text-zinc-600">
+                          Internal
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1 text-sm text-zinc-700">{n.body}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="rounded-lg border border-dashed border-zinc-300 p-4 text-center text-sm text-zinc-500">
+                  No notes yet.
+                </p>
+              )}
+            </div>
+            <form action={addJobNote} className="flex flex-col gap-2">
+              <input type="hidden" name="job_id" value={job.id} />
+              <textarea
+                name="body"
+                rows={2}
+                required
+                placeholder="Add a note..."
+                className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
+              />
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 text-xs text-zinc-600">
+                  <input
+                    type="checkbox"
+                    name="is_internal"
+                    defaultChecked
+                    className="h-4 w-4 rounded border-zinc-300"
+                  />
+                  Internal only (not customer-facing)
+                </label>
+                <button
+                  type="submit"
+                  className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+                >
+                  Add note
+                </button>
+              </div>
+            </form>
+          </section>
+
+          <section>
             <h2 className="mb-2 font-medium text-zinc-900">Status history</h2>
             <SimpleTable
               rows={history ?? []}
@@ -450,12 +519,18 @@ export default async function JobDetailPage({
             customers={customers ?? []}
             sites={sites ?? []}
             jobTypes={jobTypes ?? []}
+            jobCategories={jobCategories ?? []}
             defaultCustomerId={job.customer_id}
             defaultSiteId={job.site_id}
             defaultTitle={job.title}
             defaultDescription={job.description ?? ""}
             defaultPriority={job.priority}
             defaultJobTypeId={job.job_type_id ?? ""}
+            defaultCategoryId={job.category_id ?? ""}
+            defaultPoReference={job.po_reference ?? ""}
+            defaultIsOvertime={job.is_overtime}
+            defaultChargeCallout={job.charge_callout}
+            defaultMileageKm={job.mileage_km}
           />
 
           <form
@@ -501,7 +576,7 @@ export default async function JobDetailPage({
             </div>
             <button
               type="submit"
-              className="rounded-md bg-zinc-900 px-3 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+              className="rounded-md bg-brand px-3 py-2 text-sm font-medium text-white hover:bg-brand-hover"
             >
               Save
             </button>

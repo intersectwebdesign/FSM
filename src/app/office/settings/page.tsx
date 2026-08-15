@@ -1,6 +1,17 @@
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
-import { updateSettings } from "./actions";
+import {
+  updateSettings,
+  updateBrandColor,
+  uploadLogo,
+  removeLogo,
+} from "./actions";
 import { addJobType, deleteJobType, updateJobType } from "./job-types-actions";
+import {
+  addJobCategory,
+  deleteJobCategory,
+  updateJobCategory,
+} from "./job-categories-actions";
 
 function formatHour(h: number) {
   if (h === 0 || h === 24) return "12:00 AM";
@@ -21,6 +32,11 @@ export default async function SettingsPage() {
     .select("id, name, enables_pat_testing")
     .order("name");
 
+  const { data: jobCategories } = await supabase
+    .from("job_categories")
+    .select("id, name")
+    .order("name");
+
   const hours = Array.from({ length: 24 }, (_, i) => i);
   const endHours = Array.from({ length: 24 }, (_, i) => i + 1);
 
@@ -32,6 +48,78 @@ export default async function SettingsPage() {
           Controls the visible hour range and drag-snap increment on the
           schedule calendar.
         </p>
+      </div>
+
+      <div>
+        <h2 className="text-lg font-semibold text-zinc-900">Branding</h2>
+        <p className="text-sm text-zinc-500">
+          Sets the accent color and logo used across the office and engineer
+          apps, and on the login screen.
+        </p>
+      </div>
+
+      <div className="flex max-w-md flex-col gap-6 rounded-lg border border-zinc-200 bg-white p-6">
+        <form action={updateBrandColor} className="flex flex-col gap-2">
+          <label className="text-sm font-medium text-zinc-700">
+            Accent color
+          </label>
+          <div className="flex items-center gap-3">
+            <input
+              type="color"
+              name="brand_color"
+              defaultValue={settings?.brand_color ?? "#2563eb"}
+              className="h-10 w-14 cursor-pointer rounded-md border border-zinc-300 bg-white p-1"
+            />
+            <button
+              type="submit"
+              className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+            >
+              Save color
+            </button>
+          </div>
+        </form>
+
+        <div className="flex flex-col gap-2 border-t border-zinc-100 pt-6">
+          <label className="text-sm font-medium text-zinc-700">Logo</label>
+          {settings?.logo_url && (
+            <div className="flex items-center gap-3">
+              <Image
+                src={settings.logo_url}
+                alt="Current logo"
+                width={160}
+                height={48}
+                unoptimized
+                className="h-10 w-auto rounded border border-zinc-200 bg-zinc-50 object-contain p-1"
+              />
+              <form action={removeLogo}>
+                <button
+                  type="submit"
+                  className="text-xs text-zinc-400 hover:text-red-600"
+                >
+                  Remove logo
+                </button>
+              </form>
+            </div>
+          )}
+          <form action={uploadLogo} className="flex items-center gap-3">
+            <input
+              type="file"
+              name="logo"
+              accept="image/png,image/jpeg,image/svg+xml,image/webp"
+              required
+              className="flex-1 text-sm text-zinc-600 file:mr-3 file:rounded-md file:border file:border-zinc-300 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-zinc-700 hover:file:bg-zinc-50"
+            />
+            <button
+              type="submit"
+              className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+            >
+              Upload
+            </button>
+          </form>
+          <p className="text-xs text-zinc-500">
+            Falls back to &quot;Field Service&quot; text when no logo is set.
+          </p>
+        </div>
       </div>
 
       <form
@@ -106,7 +194,7 @@ export default async function SettingsPage() {
 
         <button
           type="submit"
-          className="mt-2 rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+          className="mt-2 rounded-md bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-hover"
         >
           Save
         </button>
@@ -191,9 +279,78 @@ export default async function SettingsPage() {
         </label>
         <button
           type="submit"
-          className="rounded-md bg-zinc-900 px-3 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+          className="rounded-md bg-brand px-3 py-2 text-sm font-medium text-white hover:bg-brand-hover"
         >
           Add job type
+        </button>
+      </form>
+
+      <div>
+        <h2 className="text-lg font-semibold text-zinc-900">
+          Job categories
+        </h2>
+        <p className="text-sm text-zinc-500">
+          A separate tag from job type, for slicing reporting later without
+          changing what type of work a job is.
+        </p>
+      </div>
+
+      <div className="max-w-md overflow-hidden rounded-lg border border-zinc-200 bg-white">
+        {jobCategories && jobCategories.length > 0 ? (
+          <div className="divide-y divide-zinc-100">
+            {jobCategories.map((jc) => (
+              <form
+                key={jc.id}
+                action={updateJobCategory}
+                className="flex flex-wrap items-center gap-2 px-4 py-3"
+              >
+                <input type="hidden" name="id" value={jc.id} />
+                <input
+                  type="text"
+                  name="name"
+                  defaultValue={jc.name}
+                  required
+                  className="w-40 flex-1 rounded-md border border-zinc-300 px-2 py-1 text-sm font-medium text-zinc-900"
+                />
+                <button
+                  type="submit"
+                  className="rounded-md border border-zinc-300 px-2 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
+                >
+                  Save
+                </button>
+                <button
+                  type="submit"
+                  formAction={deleteJobCategory}
+                  className="text-xs text-zinc-400 hover:text-red-600"
+                >
+                  Delete
+                </button>
+              </form>
+            ))}
+          </div>
+        ) : (
+          <p className="p-6 text-center text-sm text-zinc-500">
+            No job categories yet.
+          </p>
+        )}
+      </div>
+
+      <form
+        action={addJobCategory}
+        className="flex max-w-md flex-wrap items-center gap-2 rounded-lg border border-dashed border-zinc-300 p-4"
+      >
+        <input
+          type="text"
+          name="name"
+          placeholder="New category (e.g. Reactive Maintenance)"
+          required
+          className="flex-1 rounded-md border border-zinc-300 px-3 py-2 text-sm"
+        />
+        <button
+          type="submit"
+          className="rounded-md bg-brand px-3 py-2 text-sm font-medium text-white hover:bg-brand-hover"
+        >
+          Add category
         </button>
       </form>
     </div>

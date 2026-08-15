@@ -7,6 +7,11 @@ import type { TablesUpdate } from "@/lib/database.types";
 import { validScheduledEnd } from "@/lib/scheduleLayout";
 import { localInputToUtcIso } from "@/lib/timezone";
 
+function generatePoReference() {
+  const random = Math.floor(100000 + Math.random() * 900000);
+  return `PO-${random}`;
+}
+
 export async function createJob(formData: FormData) {
   const customerId = String(formData.get("customer_id") ?? "");
   const siteId = String(formData.get("site_id") ?? "");
@@ -14,6 +19,8 @@ export async function createJob(formData: FormData) {
   const description = String(formData.get("description") ?? "").trim();
   const priority = String(formData.get("priority") ?? "medium");
   const jobTypeId = String(formData.get("job_type_id") ?? "");
+  const categoryId = String(formData.get("category_id") ?? "");
+  const poReferenceInput = String(formData.get("po_reference") ?? "").trim();
   const assignedEngineerId = String(formData.get("assigned_engineer_id") ?? "");
   const scheduledStartLocal = String(formData.get("scheduled_start") ?? "");
   const scheduledEndLocal = validScheduledEnd(
@@ -45,6 +52,8 @@ export async function createJob(formData: FormData) {
       description: description || null,
       priority,
       job_type_id: jobTypeId || null,
+      category_id: categoryId || null,
+      po_reference: poReferenceInput || generatePoReference(),
       status,
       assigned_engineer_id: assignedEngineerId || null,
       scheduled_start: scheduledStart || null,
@@ -75,6 +84,11 @@ export async function updateJobDetails(formData: FormData) {
   const description = String(formData.get("description") ?? "").trim();
   const priority = String(formData.get("priority") ?? "medium");
   const jobTypeId = String(formData.get("job_type_id") ?? "");
+  const categoryId = String(formData.get("category_id") ?? "");
+  const poReference = String(formData.get("po_reference") ?? "").trim();
+  const isOvertime = formData.get("is_overtime") === "on";
+  const chargeCallout = formData.get("charge_callout") === "on";
+  const mileageKmRaw = String(formData.get("mileage_km") ?? "").trim();
   if (!jobId || !customerId || !siteId || !title) return;
 
   const supabase = await createClient();
@@ -87,6 +101,11 @@ export async function updateJobDetails(formData: FormData) {
       description: description || null,
       priority,
       job_type_id: jobTypeId || null,
+      category_id: categoryId || null,
+      po_reference: poReference || null,
+      is_overtime: isOvertime,
+      charge_callout: chargeCallout,
+      mileage_km: mileageKmRaw === "" ? null : Number(mileageKmRaw),
     })
     .eq("id", jobId);
 
