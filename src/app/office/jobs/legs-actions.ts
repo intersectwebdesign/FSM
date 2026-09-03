@@ -33,8 +33,11 @@ async function recomputeJobRollupStatus(
   } else if (legs.every((l) => l.status === "completed" || l.status === "cancelled")) {
     nextStatus = "completed";
   } else if (
+    legs.length > 1 ||
     legs.some((l) => ACTIVE_LEG_STATUSES.includes(l.status) || l.status === "completed")
   ) {
+    // A job with more than one leg is inherently a multi-visit job in
+    // progress, even before any individual leg has started.
     nextStatus = "in_progress";
   } else if (legs.some((l) => l.scheduled_start)) {
     nextStatus = "scheduled";

@@ -9,6 +9,7 @@ import { MapsLink } from "@/components/MapsLink";
 import { ChecklistItemRow } from "@/components/ChecklistItemRow";
 import { addChecklistItem } from "@/app/office/jobs/checklist-actions";
 import { addJobNote } from "@/app/office/jobs/notes-actions";
+import { addTimeEntry } from "@/app/office/jobs/time-actions";
 import {
   DEFAULT_RETEST_MONTHS,
   formatCurrency,
@@ -45,6 +46,7 @@ export default async function EngineerJobDetailPage({
     { data: photos },
     { data: notes },
     { data: settings },
+    { data: timeEntries },
   ] = await Promise.all([
     supabase
       .from("jobs")
@@ -75,6 +77,11 @@ export default async function EngineerJobDetailPage({
       .eq("job_id", id)
       .order("created_at", { ascending: false }),
     supabase.from("company_settings").select("maps_provider").eq("id", 1).single(),
+    supabase
+      .from("job_time_entries")
+      .select("id, duration_minutes, note, started_at")
+      .eq("job_id", id)
+      .order("started_at", { ascending: false }),
   ]);
 
   const mapsProvider = settings?.maps_provider === "google" ? "google" : "apple";
@@ -297,6 +304,52 @@ export default async function EngineerJobDetailPage({
           </ul>
         </section>
       )}
+
+      <section className="rounded-lg border border-zinc-200 bg-white p-4">
+        <h2 className="mb-3 text-sm font-semibold text-zinc-900">
+          Time entries
+        </h2>
+        <p className="mb-3 text-xs text-zinc-500">
+          Log time manually if a status change was missed or you did work
+          off-app.
+        </p>
+        <ul className="mb-3 flex flex-col gap-2 text-sm text-zinc-600">
+          {timeEntries?.map((entry) => (
+            <li key={entry.id}>
+              <span className="font-medium text-zinc-900">
+                {formatDuration(entry.duration_minutes)}
+              </span>{" "}
+              &mdash; {formatDateTime(entry.started_at)}
+              {entry.note ? ` · ${entry.note}` : ""}
+            </li>
+          ))}
+        </ul>
+        <form action={addTimeEntry} className="flex flex-col gap-2">
+          <input type="hidden" name="job_id" value={job.id} />
+          <div className="flex gap-2">
+            <input
+              type="number"
+              step="0.25"
+              min="0"
+              name="hours"
+              placeholder="Hours (e.g. 1.5)"
+              required
+              className="w-1/2 rounded-md border border-zinc-300 px-3 py-2 text-sm"
+            />
+            <input
+              name="note"
+              placeholder="Note (optional)"
+              className="w-1/2 rounded-md border border-zinc-300 px-3 py-2 text-sm"
+            />
+          </div>
+          <button
+            type="submit"
+            className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700"
+          >
+            Add time
+          </button>
+        </form>
+      </section>
 
       <section className="rounded-lg border border-zinc-200 bg-white p-4">
         <h2 className="mb-3 text-sm font-semibold text-zinc-900">

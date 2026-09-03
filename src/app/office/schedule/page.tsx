@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { addDays, dateKey, parseDateKey } from "@/lib/scheduleLayout";
-import { startOfDayUtc } from "@/lib/timezone";
+import { dateKeyInTimeZone, startOfDayUtc } from "@/lib/timezone";
 import { ScheduleControls } from "./ScheduleControls";
 import { ScheduleGrid } from "./ScheduleGrid";
 
@@ -11,7 +11,8 @@ export default async function SchedulePage({
 }) {
   const { view, date, engineer } = await searchParams;
   const mode = view === "week" ? "week" : "day";
-  const anchorDate = date ? parseDateKey(date) : new Date();
+  const todayKey = dateKeyInTimeZone(new Date().toISOString());
+  const anchorDate = parseDateKey(date || todayKey);
   anchorDate.setHours(0, 0, 0, 0);
 
   const rangeStart = anchorDate;
@@ -115,7 +116,7 @@ export default async function SchedulePage({
       <ScheduleControls
         mode={mode}
         dateStr={dateKey(anchorDate)}
-        todayStr={dateKey(new Date())}
+        todayStr={todayKey}
         prevStr={dateKey(prevDate)}
         nextStr={dateKey(nextDate)}
         engineers={engineers ?? []}
@@ -123,6 +124,7 @@ export default async function SchedulePage({
       />
 
       <ScheduleGrid
+        key={`${mode}-${dateKey(anchorDate)}-${selectedEngineerId ?? ""}`}
         mode={mode}
         anchorDate={anchorDate}
         engineers={engineers ?? []}

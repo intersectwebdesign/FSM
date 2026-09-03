@@ -7,6 +7,7 @@ import { DeleteJobButton } from "@/components/DeleteJobButton";
 import { ChecklistItemRow } from "@/components/ChecklistItemRow";
 import { addChecklistItem } from "../checklist-actions";
 import { addJobNote } from "../notes-actions";
+import { addTimeEntry, deleteTimeEntry } from "../time-actions";
 import {
   formatCurrency,
   formatDateTime,
@@ -36,6 +37,7 @@ export default async function JobDetailPage({
     { data: photos },
     { data: engineers },
     { data: notes },
+    { data: timeEntries },
   ] = await Promise.all([
     supabase
       .from("jobs")
@@ -75,6 +77,11 @@ export default async function JobDetailPage({
       .select("id, body, is_internal, created_at, profiles(full_name)")
       .eq("job_id", id)
       .order("created_at", { ascending: false }),
+    supabase
+      .from("job_time_entries")
+      .select("id, duration_minutes, note, started_at, profiles(full_name)")
+      .eq("job_id", id)
+      .order("started_at", { ascending: false }),
   ]);
 
   if (!job) notFound();
@@ -226,6 +233,96 @@ export default async function JobDetailPage({
                 </span>
               </p>
             </div>
+          </section>
+
+          <section>
+            <h2 className="mb-2 font-medium text-zinc-900">Time entries</h2>
+            <p className="mb-2 text-xs text-zinc-500">
+              On top of the automatic travel/on-site tracking above &mdash;
+              for correcting a missed status change or logging time worked
+              off-app.
+            </p>
+            <div className="mb-3 flex flex-col gap-2">
+              {timeEntries && timeEntries.length > 0 ? (
+                timeEntries.map((entry) => (
+                  <div
+                    key={entry.id}
+                    className="flex items-center justify-between gap-2 rounded-lg border border-zinc-200 bg-white p-3"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-zinc-900">
+                        {formatDuration(entry.duration_minutes)} &middot;{" "}
+                        {entry.profiles?.full_name ?? "Unknown"}
+                      </p>
+                      <p className="text-xs text-zinc-500">
+                        {formatDateTime(entry.started_at)}
+                        {entry.note ? ` · ${entry.note}` : ""}
+                      </p>
+                    </div>
+                    <form action={deleteTimeEntry}>
+                      <input type="hidden" name="entry_id" value={entry.id} />
+                      <input type="hidden" name="job_id" value={job.id} />
+                      <button
+                        type="submit"
+                        className="text-xs text-zinc-400 hover:text-red-600"
+                      >
+                        Delete
+                      </button>
+                    </form>
+                  </div>
+                ))
+              ) : (
+                <p className="rounded-lg border border-dashed border-zinc-300 p-4 text-center text-sm text-zinc-500">
+                  No manual time entries.
+                </p>
+              )}
+            </div>
+            <form
+              action={addTimeEntry}
+              className="flex flex-wrap items-end gap-2 rounded-lg border border-dashed border-zinc-300 p-3"
+            >
+              <input type="hidden" name="job_id" value={job.id} />
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-zinc-500">Engineer</label>
+                <select
+                  name="engineer_id"
+                  defaultValue={job.assigned_engineer_id ?? ""}
+                  className="rounded-md border border-zinc-300 px-2 py-1.5 text-sm"
+                >
+                  {engineers?.map((e) => (
+                    <option key={e.id} value={e.id}>
+                      {e.full_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-zinc-500">Hours</label>
+                <input
+                  type="number"
+                  step="0.25"
+                  min="0"
+                  name="hours"
+                  placeholder="1.5"
+                  required
+                  className="w-24 rounded-md border border-zinc-300 px-2 py-1.5 text-sm"
+                />
+              </div>
+              <div className="flex flex-1 flex-col gap-1">
+                <label className="text-xs text-zinc-500">Note (optional)</label>
+                <input
+                  name="note"
+                  placeholder="What was the time for?"
+                  className="rounded-md border border-zinc-300 px-2 py-1.5 text-sm"
+                />
+              </div>
+              <button
+                type="submit"
+                className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+              >
+                Add time
+              </button>
+            </form>
           </section>
 
           <section>
