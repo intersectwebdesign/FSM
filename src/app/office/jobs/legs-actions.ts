@@ -7,15 +7,13 @@ import type { Database, TablesUpdate } from "@/lib/database.types";
 import { validScheduledEnd } from "@/lib/scheduleLayout";
 import { localInputToUtcIso } from "@/lib/timezone";
 
-const ACTIVE_LEG_STATUSES = ["travelling", "on_site"];
-
 async function recomputeJobRollupStatus(
   supabase: SupabaseClient<Database>,
   jobId: string
 ) {
   const { data: legs } = await supabase
     .from("job_legs")
-    .select("status, scheduled_start, completed_at")
+    .select("status, completed_at")
     .eq("job_id", jobId);
 
   if (!legs || legs.length === 0) return;
@@ -27,22 +25,17 @@ async function recomputeJobRollupStatus(
     .single();
   if (!job) return;
 
+  // The job's own original scheduling is the initial visit; any leg on
+  // top of that is evidence the job is already underway, regardless of
+  // whether that leg itself has started yet. (legs.length >= 1 is
+  // guaranteed here by the early return above.)
   let nextStatus: string;
   if (legs.every((l) => l.status === "cancelled")) {
     nextStatus = "cancelled";
   } else if (legs.every((l) => l.status === "completed" || l.status === "cancelled")) {
     nextStatus = "completed";
-  } else if (
-    legs.length > 1 ||
-    legs.some((l) => ACTIVE_LEG_STATUSES.includes(l.status) || l.status === "completed")
-  ) {
-    // A job with more than one leg is inherently a multi-visit job in
-    // progress, even before any individual leg has started.
-    nextStatus = "in_progress";
-  } else if (legs.some((l) => l.scheduled_start)) {
-    nextStatus = "scheduled";
   } else {
-    nextStatus = "unscheduled";
+    nextStatus = "in_progress";
   }
 
   if (nextStatus === job.status) return;

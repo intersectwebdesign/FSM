@@ -22,7 +22,7 @@ export default async function MyJobsPage() {
     supabase
       .from("job_legs")
       .select(
-        "id, description, status, scheduled_start, job_id, jobs(title, customers(name), sites(address, city))"
+        "id, description, status, scheduled_start, job_id, jobs(title, status, customers(name), sites(address, city))"
       )
       .eq("assigned_engineer_id", user?.id ?? "")
       .neq("status", "completed")
@@ -41,6 +41,7 @@ export default async function MyJobsPage() {
         href: `/engineer/jobs/${j.id}`,
         title: j.title,
         status: j.status,
+        jobStatus: null as string | null,
         scheduled_start: j.scheduled_start,
         customerName: j.customers?.name,
         siteAddress: j.sites?.address,
@@ -53,6 +54,7 @@ export default async function MyJobsPage() {
         href: `/engineer/legs/${l.id}`,
         title: `${l.jobs!.title} — ${l.description}`,
         status: l.status,
+        jobStatus: l.jobs!.status,
         scheduled_start: l.scheduled_start,
         customerName: l.jobs!.customers?.name,
         siteAddress: l.jobs!.sites?.address,
@@ -76,9 +78,14 @@ export default async function MyJobsPage() {
               href={item.href}
               className="block rounded-lg border border-zinc-200 bg-white p-4 shadow-sm active:bg-zinc-50"
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <span className="font-medium text-zinc-900">{item.title}</span>
-                <StatusBadge status={item.status} />
+                <div className="flex items-center gap-1.5">
+                  {item.jobStatus && item.jobStatus !== item.status && (
+                    <StatusBadge status={item.jobStatus} />
+                  )}
+                  <StatusBadge status={item.status} />
+                </div>
               </div>
               <p className="mt-1 text-sm text-zinc-500">
                 {item.customerName}

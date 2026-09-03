@@ -19,7 +19,7 @@ export default async function EngineerLegDetailPage({
     supabase
       .from("job_legs")
       .select(
-        "*, jobs(id, title, description, customers(name), sites(address, city, postcode, access_notes))"
+        "*, jobs(id, title, description, status, customers(name), sites(address, city, postcode, access_notes))"
       )
       .eq("id", id)
       .single(),
@@ -54,6 +54,7 @@ export default async function EngineerLegDetailPage({
         </Link>
         <div className="mt-1 flex items-center gap-2">
           <h1 className="text-lg font-semibold text-zinc-900">{job.title}</h1>
+          {job.status !== leg.status && <StatusBadge status={job.status} />}
           <StatusBadge status={leg.status} />
         </div>
         <p className="text-sm font-medium text-zinc-700">{leg.description}</p>
