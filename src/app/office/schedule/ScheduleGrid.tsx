@@ -56,6 +56,7 @@ export function ScheduleGrid({
   anchorDate,
   engineers,
   selectedEngineerId,
+  showWeekends = true,
   settings,
   jobs,
   legs = [],
@@ -65,6 +66,7 @@ export function ScheduleGrid({
   anchorDate: Date;
   engineers: Engineer[];
   selectedEngineerId: string | null;
+  showWeekends?: boolean;
   settings: Settings;
   jobs: JobRow[];
   legs?: JobRow[];
@@ -99,8 +101,8 @@ export function ScheduleGrid({
         date: d,
         engineerId: selectedEngineerId,
       };
-    });
-  }, [mode, anchorDate, engineers, selectedEngineerId]);
+    }).filter((col) => showWeekends || ![0, 6].includes(col.date.getDay()));
+  }, [mode, anchorDate, engineers, selectedEngineerId, showWeekends]);
 
   const totalHours = settings.day_end_hour - settings.day_start_hour;
   const gridHeight = totalHours * HOUR_HEIGHT;
@@ -345,17 +347,19 @@ function JobCard({
   const widthPct = 100 / laneCount;
   const leftPct = lane * widthPct;
 
+  // Mirrors STATUS_COLORS in src/lib/types.ts: green = done, blue =
+  // scheduled, yellow = pending/in flux, cancelled stays its own color.
   const colorClass =
     {
-      unscheduled: "bg-zinc-100 border-zinc-300",
+      unscheduled: "bg-yellow-50 border-yellow-300",
       scheduled: "bg-blue-50 border-blue-300",
-      in_progress: "bg-amber-50 border-amber-300",
-      travelling: "bg-purple-50 border-purple-300",
-      on_site: "bg-orange-50 border-orange-300",
-      paused: "bg-slate-100 border-slate-300",
+      in_progress: "bg-yellow-50 border-yellow-300",
+      travelling: "bg-yellow-50 border-yellow-300",
+      on_site: "bg-yellow-50 border-yellow-300",
+      paused: "bg-yellow-50 border-yellow-300",
       completed: "bg-green-50 border-green-300",
       cancelled: "bg-red-50 border-red-300",
-    }[job.status] ?? "bg-zinc-100 border-zinc-300";
+    }[job.status] ?? "bg-yellow-50 border-yellow-300";
 
   return (
     <div

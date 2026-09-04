@@ -8,6 +8,7 @@ import { ChecklistItemRow } from "@/components/ChecklistItemRow";
 import { addChecklistItem } from "../checklist-actions";
 import { addJobNote } from "../notes-actions";
 import { addTimeEntry, deleteTimeEntry } from "../time-actions";
+import { createInvoiceFromJob } from "../../invoices/actions";
 import {
   formatCurrency,
   formatDateTime,
@@ -38,6 +39,7 @@ export default async function JobDetailPage({
     { data: engineers },
     { data: notes },
     { data: timeEntries },
+    { data: invoices },
   ] = await Promise.all([
     supabase
       .from("jobs")
@@ -82,6 +84,11 @@ export default async function JobDetailPage({
       .select("id, duration_minutes, note, started_at, profiles(full_name)")
       .eq("job_id", id)
       .order("started_at", { ascending: false }),
+    supabase
+      .from("invoices")
+      .select("id, invoice_number, status, total")
+      .eq("job_id", id)
+      .order("created_at", { ascending: false }),
   ]);
 
   if (!job) notFound();
@@ -209,6 +216,44 @@ export default async function JobDetailPage({
               <CostTile label="Materials" value={costs?.materials_cost} />
               <CostTile label="Expenses" value={costs?.expenses_cost} />
               <CostTile label="Total" value={costs?.total_cost} bold />
+            </div>
+          </section>
+
+          <section>
+            <h2 className="mb-2 font-medium text-zinc-900">Invoicing</h2>
+            <div className="flex flex-col gap-2">
+              {invoices && invoices.length > 0 ? (
+                invoices.map((inv) => (
+                  <Link
+                    key={inv.id}
+                    href={`/office/invoices/${inv.id}`}
+                    className="flex items-center justify-between gap-2 rounded-lg border border-zinc-200 bg-white p-3 hover:bg-zinc-50"
+                  >
+                    <span className="text-sm font-medium text-zinc-900">
+                      {inv.invoice_number}
+                    </span>
+                    <span className="text-sm text-zinc-600">
+                      {formatCurrency(inv.total)}
+                    </span>
+                    <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium capitalize text-zinc-700">
+                      {inv.status}
+                    </span>
+                  </Link>
+                ))
+              ) : (
+                <p className="rounded-lg border border-dashed border-zinc-300 p-4 text-center text-sm text-zinc-500">
+                  No invoice generated yet.
+                </p>
+              )}
+              <form action={createInvoiceFromJob}>
+                <input type="hidden" name="job_id" value={job.id} />
+                <button
+                  type="submit"
+                  className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+                >
+                  Generate invoice from current costs
+                </button>
+              </form>
             </div>
           </section>
 

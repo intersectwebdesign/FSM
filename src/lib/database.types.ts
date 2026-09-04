@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.15"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -63,34 +63,67 @@ export type Database = {
       }
       company_settings: {
         Row: {
+          abn: string | null
           brand_color: string
+          business_address: string | null
+          business_email: string | null
+          business_name: string | null
+          business_phone: string | null
           day_end_hour: number
           day_start_hour: number
+          gst_rate: number
+          gst_registered: boolean
           id: number
           logo_url: string | null
           maps_provider: string
+          payment_instructions: string | null
+          payment_terms_days: number
+          show_weekends: boolean
           slot_minutes: number
           updated_at: string
+          week_starts_on: number
         }
         Insert: {
+          abn?: string | null
           brand_color?: string
+          business_address?: string | null
+          business_email?: string | null
+          business_name?: string | null
+          business_phone?: string | null
           day_end_hour?: number
           day_start_hour?: number
+          gst_rate?: number
+          gst_registered?: boolean
           id?: number
           logo_url?: string | null
           maps_provider?: string
+          payment_instructions?: string | null
+          payment_terms_days?: number
+          show_weekends?: boolean
           slot_minutes?: number
           updated_at?: string
+          week_starts_on?: number
         }
         Update: {
+          abn?: string | null
           brand_color?: string
+          business_address?: string | null
+          business_email?: string | null
+          business_name?: string | null
+          business_phone?: string | null
           day_end_hour?: number
           day_start_hour?: number
+          gst_rate?: number
+          gst_registered?: boolean
           id?: number
           logo_url?: string | null
           maps_provider?: string
+          payment_instructions?: string | null
+          payment_terms_days?: number
+          show_weekends?: boolean
           slot_minutes?: number
           updated_at?: string
+          week_starts_on?: number
         }
         Relationships: []
       }
@@ -114,6 +147,117 @@ export type Database = {
           notes?: string | null
         }
         Relationships: []
+      }
+      invoice_line_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          invoice_id: string
+          quantity: number
+          sort_order: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          invoice_id: string
+          quantity?: number
+          sort_order?: number
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          invoice_id?: string
+          quantity?: number
+          sort_order?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_line_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          due_date: string | null
+          gst_amount: number
+          id: string
+          invoice_number: string
+          issued_at: string | null
+          job_id: string
+          notes: string | null
+          paid_at: string | null
+          status: string
+          subtotal: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          gst_amount?: number
+          id?: string
+          invoice_number: string
+          issued_at?: string | null
+          job_id: string
+          notes?: string | null
+          paid_at?: string | null
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          gst_amount?: number
+          id?: string
+          invoice_number?: string
+          issued_at?: string | null
+          job_id?: string
+          notes?: string | null
+          paid_at?: string | null
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "job_costs_summary"
+            referencedColumns: ["job_id"]
+          },
+          {
+            foreignKeyName: "invoices_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       job_categories: {
         Row: {
@@ -978,6 +1122,7 @@ export type Database = {
     }
     Functions: {
       current_user_role: { Args: never; Returns: string }
+      next_invoice_number: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never

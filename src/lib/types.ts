@@ -35,13 +35,16 @@ export const STATUS_LABELS: Record<JobStatus, string> = {
   cancelled: "Cancelled",
 };
 
+// Simplified to three status colors: green = done, blue = scheduled and
+// waiting, yellow = pending/needs attention (everything still in flux).
+// Cancelled stays its own color since "won't happen" isn't "not done yet".
 export const STATUS_COLORS: Record<JobStatus, string> = {
-  unscheduled: "bg-zinc-200 text-zinc-800",
+  unscheduled: "bg-yellow-100 text-yellow-800",
   scheduled: "bg-blue-100 text-blue-800",
-  in_progress: "bg-amber-100 text-amber-800",
-  travelling: "bg-purple-100 text-purple-800",
-  on_site: "bg-orange-100 text-orange-800",
-  paused: "bg-slate-200 text-slate-700",
+  in_progress: "bg-yellow-100 text-yellow-800",
+  travelling: "bg-yellow-100 text-yellow-800",
+  on_site: "bg-yellow-100 text-yellow-800",
+  paused: "bg-yellow-100 text-yellow-800",
   completed: "bg-green-100 text-green-800",
   cancelled: "bg-red-100 text-red-800",
 };

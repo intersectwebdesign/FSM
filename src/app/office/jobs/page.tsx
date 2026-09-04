@@ -1,14 +1,35 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { StatusBadge } from "@/components/StatusBadge";
-import { JOB_STATUSES, STATUS_LABELS, formatDateTime } from "@/lib/types";
+import { STATUS_LABELS, formatDateTime, type JobStatus } from "@/lib/types";
+
+// JOB_STATUSES (the manually-settable set) deliberately excludes
+// "in_progress" -- it's a computed rollup for multi-leg jobs, not something
+// office sets by hand. The filter still needs to offer it, or any filtered
+// view would silently hide every in-progress job.
+const FILTERABLE_STATUSES: JobStatus[] = [
+  "unscheduled",
+  "scheduled",
+  "in_progress",
+  "travelling",
+  "on_site",
+  "paused",
+  "completed",
+  "cancelled",
+];
 
 export default async function JobsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; engineer?: string }>;
+  searchParams: Promise<{ status?: string | string[]; engineer?: string }>;
 }) {
   const { status, engineer } = await searchParams;
+  const selectedStatuses = status
+    ? Array.isArray(status)
+      ? status
+      : [status]
+    : [];
+
   const supabase = await createClient();
 
   let query = supabase
@@ -18,7 +39,7 @@ export default async function JobsPage({
     )
     .order("created_at", { ascending: false });
 
-  if (status) query = query.eq("status", status);
+  if (selectedStatuses.length > 0) query = query.in("status", selectedStatuses);
   if (engineer) query = query.eq("assigned_engineer_id", engineer);
 
   const [{ data: jobs }, { data: engineers }] = await Promise.all([
@@ -43,37 +64,55 @@ export default async function JobsPage({
         </Link>
       </div>
 
-      <form className="flex flex-wrap gap-3 text-sm">
-        <select
-          name="status"
-          defaultValue={status ?? ""}
-          className="rounded-md border border-zinc-300 px-3 py-1.5"
-        >
-          <option value="">All statuses</option>
-          {JOB_STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {STATUS_LABELS[s]}
-            </option>
-          ))}
-        </select>
-        <select
-          name="engineer"
-          defaultValue={engineer ?? ""}
-          className="rounded-md border border-zinc-300 px-3 py-1.5"
-        >
-          <option value="">All engineers</option>
-          {engineers?.map((e) => (
-            <option key={e.id} value={e.id}>
-              {e.full_name}
-            </option>
-          ))}
-        </select>
-        <button
-          type="submit"
-          className="rounded-md border border-zinc-300 px-3 py-1.5 font-medium text-zinc-700 hover:bg-zinc-50"
-        >
-          Filter
-        </button>
+      <form className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-4 text-sm">
+        <div>
+          <p className="mb-2 text-xs font-medium uppercase text-zinc-500">
+            Statuses (uncheck any to exclude them, e.g. hide Completed)
+          </p>
+          <div className="flex flex-wrap gap-x-4 gap-y-2">
+            {FILTERABLE_STATUSES.map((s) => (
+              <label key={s} className="flex items-center gap-1.5 text-zinc-700">
+                <input
+                  type="checkbox"
+                  name="status"
+                  value={s}
+                  defaultChecked={
+                    selectedStatuses.length === 0 || selectedStatuses.includes(s)
+                  }
+                  className="h-4 w-4 rounded border-zinc-300"
+                />
+                {STATUS_LABELS[s]}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 border-t border-zinc-100 pt-3">
+          <select
+            name="engineer"
+            defaultValue={engineer ?? ""}
+            className="rounded-md border border-zinc-300 px-3 py-1.5"
+          >
+            <option value="">All engineers</option>
+            {engineers?.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.full_name}
+              </option>
+            ))}
+          </select>
+          <button
+            type="submit"
+            className="rounded-md bg-brand px-3 py-1.5 font-medium text-white hover:bg-brand-hover"
+          >
+            Filter
+          </button>
+          <Link
+            href="/office/jobs"
+            className="text-xs text-zinc-500 hover:text-zinc-900 hover:underline"
+          >
+            Reset
+          </Link>
+        </div>
       </form>
 
       <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white">

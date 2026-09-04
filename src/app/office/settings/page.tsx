@@ -5,6 +5,7 @@ import {
   updateBrandColor,
   uploadLogo,
   removeLogo,
+  updateBusinessDetails,
 } from "./actions";
 import { addJobType, deleteJobType, updateJobType } from "./job-types-actions";
 import {
@@ -122,6 +123,134 @@ export default async function SettingsPage() {
         </div>
       </div>
 
+      <div>
+        <h2 className="text-lg font-semibold text-zinc-900">
+          Business details
+        </h2>
+        <p className="text-sm text-zinc-500">
+          Appears on invoices &mdash; your legal name, ABN, and how
+          customers should pay you.
+        </p>
+      </div>
+
+      <form
+        action={updateBusinessDetails}
+        className="flex max-w-md flex-col gap-4 rounded-lg border border-zinc-200 bg-white p-6"
+      >
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-zinc-700">
+            Business name
+          </label>
+          <input
+            name="business_name"
+            defaultValue={settings?.business_name ?? ""}
+            className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-zinc-700">ABN</label>
+          <input
+            name="abn"
+            defaultValue={settings?.abn ?? ""}
+            className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-zinc-700">
+            Business address
+          </label>
+          <textarea
+            name="business_address"
+            rows={2}
+            defaultValue={settings?.business_address ?? ""}
+            className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
+          />
+        </div>
+
+        <div className="flex gap-3">
+          <div className="flex flex-1 flex-col gap-1">
+            <label className="text-sm font-medium text-zinc-700">Phone</label>
+            <input
+              name="business_phone"
+              defaultValue={settings?.business_phone ?? ""}
+              className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
+            />
+          </div>
+          <div className="flex flex-1 flex-col gap-1">
+            <label className="text-sm font-medium text-zinc-700">Email</label>
+            <input
+              type="email"
+              name="business_email"
+              defaultValue={settings?.business_email ?? ""}
+              className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
+            />
+          </div>
+        </div>
+
+        <label className="flex items-center gap-2 text-sm text-zinc-700">
+          <input
+            type="checkbox"
+            name="gst_registered"
+            defaultChecked={settings?.gst_registered ?? true}
+            className="h-4 w-4 rounded border-zinc-300"
+          />
+          Registered for GST
+        </label>
+
+        <div className="flex gap-3">
+          <div className="flex flex-1 flex-col gap-1">
+            <label className="text-sm font-medium text-zinc-700">
+              GST rate
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              max="1"
+              name="gst_rate"
+              defaultValue={settings?.gst_rate ?? 0.1}
+              className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
+            />
+            <p className="text-xs text-zinc-500">e.g. 0.10 for 10%</p>
+          </div>
+          <div className="flex flex-1 flex-col gap-1">
+            <label className="text-sm font-medium text-zinc-700">
+              Payment terms
+            </label>
+            <input
+              type="number"
+              min="0"
+              name="payment_terms_days"
+              defaultValue={settings?.payment_terms_days ?? 14}
+              className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
+            />
+            <p className="text-xs text-zinc-500">Days until due</p>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-zinc-700">
+            Payment instructions
+          </label>
+          <textarea
+            name="payment_instructions"
+            rows={2}
+            placeholder="e.g. Bank transfer to BSB 000-000, Acc 00000000"
+            defaultValue={settings?.payment_instructions ?? ""}
+            className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
+          />
+        </div>
+
+        <button
+          type="submit"
+          className="mt-2 rounded-md bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-hover"
+        >
+          Save
+        </button>
+      </form>
+
       <form
         action={updateSettings}
         className="flex max-w-md flex-col gap-4 rounded-lg border border-zinc-200 bg-white p-6"
@@ -191,6 +320,36 @@ export default async function SettingsPage() {
             <option value="google">Google Maps</option>
           </select>
         </div>
+
+        <div className="flex flex-col gap-1 border-t border-zinc-100 pt-4">
+          <label className="text-sm font-medium text-zinc-700">
+            Week starts on
+          </label>
+          <select
+            name="week_starts_on"
+            defaultValue={settings?.week_starts_on ?? 1}
+            className="rounded-md border border-zinc-300 px-3 py-2 text-sm"
+          >
+            <option value={1}>Monday</option>
+            <option value={0}>Sunday</option>
+          </select>
+        </div>
+
+        <label className="flex items-center gap-2 text-sm text-zinc-700">
+          <input
+            type="checkbox"
+            name="show_weekends"
+            defaultChecked={settings?.show_weekends ?? true}
+            className="h-4 w-4 rounded border-zinc-300"
+          />
+          Show Saturday &amp; Sunday on the schedule
+        </label>
+        <p className="-mt-2 text-xs text-zinc-500">
+          Unchecking this hides weekend columns from Week view and skips
+          weekends when stepping through Day view with Prev/Next. Existing
+          weekend jobs are unaffected and still show on the jobs list and
+          &quot;Today&quot;.
+        </p>
 
         <button
           type="submit"

@@ -25,6 +25,27 @@ export function addDays(d: Date, days: number): Date {
   return copy;
 }
 
+/** True for Saturday/Sunday, regardless of the configured week start. */
+export function isWeekend(d: Date): boolean {
+  const day = d.getDay();
+  return day === 0 || day === 6;
+}
+
+/** Calendar-week start (0=Sunday..6=Saturday) containing `d`. */
+export function startOfWeek(d: Date, weekStartsOn: number): Date {
+  const diff = (d.getDay() - weekStartsOn + 7) % 7;
+  return addDays(d, -diff);
+}
+
+/** Steps a day forward/backward, skipping weekends when `skipWeekends` is set. */
+export function stepDay(d: Date, direction: 1 | -1, skipWeekends: boolean): Date {
+  let next = addDays(d, direction);
+  while (skipWeekends && isWeekend(next)) {
+    next = addDays(next, direction);
+  }
+  return next;
+}
+
 /**
  * Assigns overlap "lanes" within a single column so simultaneously
  * scheduled jobs render side-by-side instead of stacking illegibly.

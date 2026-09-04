@@ -1,5 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
-import { addDays, dateKey, parseDateKey } from "@/lib/scheduleLayout";
+import {
+  addDays,
+  dateKey,
+  parseDateKey,
+  startOfWeek,
+  stepDay,
+} from "@/lib/scheduleLayout";
 import { dateKeyInTimeZone, startOfDayUtc } from "@/lib/timezone";
 import { ScheduleControls } from "./ScheduleControls";
 import { ScheduleGrid } from "./ScheduleGrid";
@@ -11,14 +17,6 @@ export default async function SchedulePage({
 }) {
   const { view, date, engineer } = await searchParams;
   const mode = view === "week" ? "week" : "day";
-  const todayKey = dateKeyInTimeZone(new Date().toISOString());
-  const anchorDate = parseDateKey(date || todayKey);
-  anchorDate.setHours(0, 0, 0, 0);
-
-  const rangeStart = anchorDate;
-  const rangeEnd = addDays(anchorDate, mode === "week" ? 7 : 1);
-  const rangeStartUtc = startOfDayUtc(dateKey(rangeStart));
-  const rangeEndUtc = startOfDayUtc(dateKey(rangeEnd));
 
   const supabase = await createClient();
 
@@ -30,6 +28,21 @@ export default async function SchedulePage({
       .order("full_name"),
     supabase.from("company_settings").select("*").eq("id", 1).single(),
   ]);
+
+  const weekStartsOn = settings?.week_starts_on ?? 1;
+  const showWeekends = settings?.show_weekends ?? true;
+
+  const todayKey = dateKeyInTimeZone(new Date().toISOString());
+  let anchorDate = parseDateKey(date || todayKey);
+  anchorDate.setHours(0, 0, 0, 0);
+  if (mode === "week") {
+    anchorDate = startOfWeek(anchorDate, weekStartsOn);
+  }
+
+  const rangeStart = anchorDate;
+  const rangeEnd = addDays(anchorDate, mode === "week" ? 7 : 1);
+  const rangeStartUtc = startOfDayUtc(dateKey(rangeStart));
+  const rangeEndUtc = startOfDayUtc(dateKey(rangeEnd));
 
   const selectedEngineerId =
     mode === "week" ? engineer || engineers?.[0]?.id || null : null;
@@ -95,8 +108,14 @@ export default async function SchedulePage({
       parentJobId: l.job_id,
     }));
 
-  const prevDate = addDays(anchorDate, mode === "week" ? -7 : -1);
-  const nextDate = addDays(anchorDate, mode === "week" ? 7 : 1);
+  const prevDate =
+    mode === "week"
+      ? addDays(anchorDate, -7)
+      : stepDay(anchorDate, -1, !showWeekends);
+  const nextDate =
+    mode === "week"
+      ? addDays(anchorDate, 7)
+      : stepDay(anchorDate, 1, !showWeekends);
 
   const rangeLabel =
     mode === "week"
@@ -129,6 +148,7 @@ export default async function SchedulePage({
         anchorDate={anchorDate}
         engineers={engineers ?? []}
         selectedEngineerId={selectedEngineerId}
+        showWeekends={showWeekends}
         settings={
           settings ?? { day_start_hour: 7, day_end_hour: 19, slot_minutes: 30 }
         }
