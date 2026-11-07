@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { addMonthsToDateKey, dateKeyInTimeZone } from "@/lib/timezone";
+import { geocodeAddress } from "@/lib/geocode";
 
 export async function updateSite(formData: FormData) {
   const id = String(formData.get("id") ?? "");
@@ -13,6 +14,8 @@ export async function updateSite(formData: FormData) {
   const accessNotes = String(formData.get("access_notes") ?? "").trim();
   if (!id || !address) return;
 
+  const location = await geocodeAddress([address, city, postcode, "Australia"]);
+
   const supabase = await createClient();
   const { error } = await supabase
     .from("sites")
@@ -21,13 +24,46 @@ export async function updateSite(formData: FormData) {
       city: city || null,
       postcode: postcode || null,
       access_notes: accessNotes || null,
+      latitude: location?.latitude ?? null,
+      longitude: location?.longitude ?? null,
     })
     .eq("id", id);
 
   if (error) throw new Error(error.message);
 
   revalidatePath(`/office/sites/${id}`);
+  revalidatePath(`/office/jobs`);
   if (customerId) revalidatePath(`/office/customers/${customerId}`);
+}
+
+export async function geocodeSite(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+
+  const supabase = await createClient();
+  const { data: site } = await supabase
+    .from("sites")
+    .select("address, city, postcode")
+    .eq("id", id)
+    .single();
+  if (!site) return;
+
+  const location = await geocodeAddress([
+    site.address,
+    site.city,
+    site.postcode,
+    "Australia",
+  ]);
+  if (!location) return;
+
+  const { error } = await supabase
+    .from("sites")
+    .update({ latitude: location.latitude, longitude: location.longitude })
+    .eq("id", id);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath(`/office/sites/${id}`);
 }
 
 export async function addAppliance(formData: FormData) {

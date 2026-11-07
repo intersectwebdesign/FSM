@@ -9,6 +9,8 @@ import { addChecklistItem } from "../checklist-actions";
 import { addJobNote } from "../notes-actions";
 import { addTimeEntry, deleteTimeEntry } from "../time-actions";
 import { createInvoiceFromJob } from "../../invoices/actions";
+import { geocodeSite } from "../../sites/actions";
+import { SiteMap } from "@/components/SiteMap";
 import {
   formatCurrency,
   formatDateTime,
@@ -44,7 +46,7 @@ export default async function JobDetailPage({
     supabase
       .from("jobs")
       .select(
-        "*, customers(id, name), sites(id, address, city, postcode, access_notes), job_types(enables_pat_testing)"
+        "*, customers(id, name), sites(id, address, city, postcode, access_notes, latitude, longitude), job_types(enables_pat_testing)"
       )
       .eq("id", id)
       .single(),
@@ -743,6 +745,34 @@ export default async function JobDetailPage({
                 </form>
               ))}
             </div>
+          </div>
+
+          <div className="rounded-lg border border-zinc-200 bg-white p-4">
+            <h3 className="mb-2 text-sm font-medium text-zinc-900">
+              Location
+            </h3>
+            {job.sites?.latitude && job.sites?.longitude ? (
+              <SiteMap
+                latitude={job.sites.latitude}
+                longitude={job.sites.longitude}
+                label={job.sites.address}
+              />
+            ) : (
+              <div className="flex flex-col items-start gap-2">
+                <p className="text-sm text-zinc-500">
+                  No map location for this site yet.
+                </p>
+                <form action={geocodeSite}>
+                  <input type="hidden" name="id" value={job.sites?.id ?? ""} />
+                  <button
+                    type="submit"
+                    className="rounded-md border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
+                  >
+                    Look up location
+                  </button>
+                </form>
+              </div>
+            )}
           </div>
 
           {job.sites?.access_notes && (

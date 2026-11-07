@@ -6,6 +6,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { ApplianceStatusBadge } from "@/components/ApplianceStatusBadge";
 import { StartTravelButton } from "@/components/StartTravelButton";
 import { MapsLink } from "@/components/MapsLink";
+import { SiteMap } from "@/components/SiteMap";
 import { ChecklistItemRow } from "@/components/ChecklistItemRow";
 import { addChecklistItem } from "@/app/office/jobs/checklist-actions";
 import { addJobNote } from "@/app/office/jobs/notes-actions";
@@ -51,7 +52,7 @@ export default async function EngineerJobDetailPage({
     supabase
       .from("jobs")
       .select(
-        "*, customers(name), sites(address, city, postcode, access_notes), job_types(enables_pat_testing)"
+        "*, customers(name), sites(address, city, postcode, access_notes, latitude, longitude), job_types(enables_pat_testing)"
       )
       .eq("id", id)
       .single(),
@@ -163,6 +164,15 @@ export default async function EngineerJobDetailPage({
           <p className="mt-1 text-sm text-zinc-500">
             Access notes: {job.sites.access_notes}
           </p>
+        )}
+        {job.sites?.latitude && job.sites?.longitude && (
+          <div className="mt-3">
+            <SiteMap
+              latitude={job.sites.latitude}
+              longitude={job.sites.longitude}
+              label={job.sites.address}
+            />
+          </div>
         )}
         {job.description && (
           <p className="mt-2 text-sm text-zinc-600">{job.description}</p>
