@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { StatusBadge } from "@/components/StatusBadge";
 import { StartTravelButton } from "@/components/StartTravelButton";
 import { MapsLink } from "@/components/MapsLink";
+import { SiteMap } from "@/components/SiteMap";
 import { formatDateTime, formatDuration } from "@/lib/types";
 import { updateLegStatus } from "@/app/office/jobs/legs-actions";
 
@@ -19,7 +20,7 @@ export default async function EngineerLegDetailPage({
     supabase
       .from("job_legs")
       .select(
-        "*, jobs(id, title, description, status, customers(name), sites(address, city, postcode, access_notes))"
+        "*, jobs(id, title, description, status, customers(name), sites(address, city, postcode, access_notes, latitude, longitude))"
       )
       .eq("id", id)
       .single(),
@@ -71,6 +72,15 @@ export default async function EngineerLegDetailPage({
           <p className="mt-1 text-sm text-zinc-500">
             Access notes: {job.sites.access_notes}
           </p>
+        )}
+        {job.sites?.latitude && job.sites?.longitude && (
+          <div className="mt-3">
+            <SiteMap
+              latitude={job.sites.latitude}
+              longitude={job.sites.longitude}
+              label={job.sites.address}
+            />
+          </div>
         )}
       </div>
 

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { geocodeAddress } from "@/lib/geocode";
 
 export async function createCustomer(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
@@ -48,6 +49,8 @@ export async function createSite(formData: FormData) {
   const accessNotes = String(formData.get("access_notes") ?? "").trim();
   if (!customerId || !address) return;
 
+  const location = await geocodeAddress([address, city, postcode, "Australia"]);
+
   const supabase = await createClient();
   const { error } = await supabase.from("sites").insert({
     customer_id: customerId,
@@ -55,6 +58,8 @@ export async function createSite(formData: FormData) {
     city: city || null,
     postcode: postcode || null,
     access_notes: accessNotes || null,
+    latitude: location?.latitude ?? null,
+    longitude: location?.longitude ?? null,
   });
 
   if (error) throw new Error(error.message);

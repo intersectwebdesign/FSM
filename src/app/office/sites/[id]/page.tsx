@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_RETEST_MONTHS, formatDate } from "@/lib/types";
 import { ApplianceStatusBadge } from "@/components/ApplianceStatusBadge";
-import { addAppliance, recordPatTest, updateSite } from "../actions";
+import { SiteMap } from "@/components/SiteMap";
+import { addAppliance, geocodeSite, recordPatTest, updateSite } from "../actions";
 
 export default async function SiteDetailPage({
   params,
@@ -87,6 +88,31 @@ export default async function SiteDetailPage({
             Save
           </button>
         </form>
+
+        <div className="mt-4 max-w-lg">
+          {site.latitude && site.longitude ? (
+            <SiteMap
+              latitude={site.latitude}
+              longitude={site.longitude}
+              label={site.address}
+            />
+          ) : (
+            <div className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-white p-4">
+              <p className="flex-1 text-sm text-zinc-500">
+                No map location for this site yet.
+              </p>
+              <form action={geocodeSite}>
+                <input type="hidden" name="id" value={site.id} />
+                <button
+                  type="submit"
+                  className="rounded-md border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
+                >
+                  Look up location
+                </button>
+              </form>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_360px]">

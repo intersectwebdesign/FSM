@@ -1017,6 +1017,8 @@ export type Database = {
           created_at: string
           customer_id: string
           id: string
+          latitude: number | null
+          longitude: number | null
           postcode: string | null
         }
         Insert: {
@@ -1026,6 +1028,8 @@ export type Database = {
           created_at?: string
           customer_id: string
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           postcode?: string | null
         }
         Update: {
@@ -1035,6 +1039,8 @@ export type Database = {
           created_at?: string
           customer_id?: string
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           postcode?: string | null
         }
         Relationships: [
